@@ -8,10 +8,14 @@
  */
 
 CHIP HalfAdder {
-    IN a, b;    // 1-bit inputs
-    OUT sum,    // Right bit of a + b 
-        carry;  // Left bit of a + b
+    IN a, b;
+    OUT sum, carry;
 
     PARTS:
-    // Put you code here:
+
+    // 計算兩個位元的 XOR，得到 sum
+    Xor(a=a, b=b, out=sum);
+
+    // 計算兩個位元的 AND，得到 carry
+    And(a=a, b=b, out=carry);
 }
