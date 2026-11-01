@@ -16,5 +16,16 @@ CHIP DMux8Way {
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    // Put your code here:
+    // 第一層：分成前四個與後四個
+    DMux(in=in, sel=sel[2], a=upper, b=lower);
+
+    // 第二層：前四個再分成兩組
+    DMux(in=upper, sel=sel[1], a=upperLeft, b=upperRight);
+    DMux(in=lower, sel=sel[1], a=lowerLeft, b=lowerRight);
+
+    // 第三層：分別輸出到 a～h
+    DMux(in=upperLeft, sel=sel[0], a=a, b=b);
+    DMux(in=upperRight, sel=sel[0], a=c, b=d);
+    DMux(in=lowerLeft, sel=sel[0], a=e, b=f);
+    DMux(in=lowerRight, sel=sel[0], a=g, b=h);
 }
