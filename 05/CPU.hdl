@@ -25,19 +25,74 @@
  * than to the address resulting from executing the current instruction. 
  */
 
+
 CHIP CPU {
 
-    IN  inM[16],         // M value input  (M = contents of RAM[A])
-        instruction[16], // Instruction for execution
-        reset;           // Signals whether to re-start the current
-                         // program (reset==1) or continue executing
-                         // the current program (reset==0).
+    IN  inM[16],
+        instruction[16],
+        reset;
 
-    OUT outM[16],        // M value output
-        writeM,          // Write to M? 
-        addressM[15],    // Address in data memory (of M)
-        pc[15];          // address of next instruction
+    OUT outM[16],
+        writeM,
+        addressM[15],
+        pc[15];
 
     PARTS:
-    // Put your code here:
+
+    // 判斷是否為 A 指令
+    Not(in=instruction[15], out=isA);
+
+    // 判斷是否為 C 指令
+    And(a=instruction[15], b=true, out=isC);
+
+    // A Register
+    Mux16(a=instruction, b=aluOut, sel=instruction[15], out=aIn);
+
+    ARegister(in=aIn, load=loadA, out=aOut, out[0..14]=addressM);
+
+    // D Register
+    And(a=isC, b=instruction[4], out=loadD);
+
+    DRegister(in=aluOut, load=loadD, out=dOut);
+
+    // ALU
+    ALU(
+        x=dOut,
+        y=aluY,
+        zx=instruction[11],
+        nx=instruction[10],
+        zy=instruction[9],
+        ny=instruction[8],
+        f=instruction[7],
+        no=instruction[6],
+        out=aluOut,
+        out=outM,
+        zr=zr,
+        ng=ng
+    );
+
+    // ALU 第二個輸入：A 或 M
+    Mux16(a=aOut, b=inM, sel=instruction[12], out=aluY);
+
+    // A Register 載入控制
+    Or(a=isA, b=instruction[5], out=loadA);
+
+    // 寫入 Memory 控制
+    And(a=isC, b=instruction[3], out=writeM);
+
+    // Jump 判斷
+    Not(in=zr, out=notZr);
+    Not(in=ng, out=notNg);
+
+    And(a=instruction[2], b=ng, out=jumpLT);
+    And(a=instruction[1], b=zr, out=jumpEQ);
+    And(a=instruction[0], b=notNg, out=jumpGT);
+
+    Or(a=jumpLT, b=jumpEQ, out=jump1);
+    Or(a=jump1, b=jumpGT, out=jump2);
+
+    And(a=isC, b=jump2, out=jump);
+
+    // PC
+    PC(in=aOut, load=jump, inc=true, reset=reset, out[0..14]=pc);
 }

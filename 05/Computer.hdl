@@ -14,10 +14,32 @@
  * with the computer via the keyboard.
  */
 
+
 CHIP Computer {
 
     IN reset;
 
     PARTS:
-    // Put your code here:
+
+    // ROM：讀取目前 PC 所指向的指令
+    ROM32K(address=pc, out=instruction);
+
+    // CPU：執行指令
+    CPU(
+        inM=inM,
+        instruction=instruction,
+        reset=reset,
+        outM=outM,
+        writeM=writeM,
+        addressM=addressM,
+        pc=pc
+    );
+
+    // Memory：讀取或寫入記憶體
+    Memory(
+        in=outM,
+        load=writeM,
+        address=addressM,
+        out=inM
+    );
 }
